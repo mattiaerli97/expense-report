@@ -26,14 +26,17 @@ export async function addExpense(
 }
 
 export function subscribeExpenses(
-  onData: (expenses: Expense[]) => void,
+  onData: (expenses: Expense[], fromCache: boolean) => void,
   onError: (err: Error) => void
 ): () => void {
   const q = query(collection(db, "expenses"), orderBy("date", "desc"));
   return onSnapshot(
     q as Query<DocumentData>,
     (snapshot) =>
-      onData(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense))),
+      onData(
+        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense)),
+        snapshot.metadata.fromCache
+      ),
     onError
   );
 }
@@ -55,7 +58,7 @@ export async function addSettlement(
 }
 
 export function subscribeSettlements(
-  onData: (settlements: Settlement[]) => void,
+  onData: (settlements: Settlement[], fromCache: boolean) => void,
   onError: (err: Error) => void
 ): () => void {
   const q = query(collection(db, "settlements"), orderBy("date", "desc"));
@@ -63,7 +66,8 @@ export function subscribeSettlements(
     q as Query<DocumentData>,
     (snapshot) =>
       onData(
-        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement))
+        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement)),
+        snapshot.metadata.fromCache
       ),
     onError
   );

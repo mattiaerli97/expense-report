@@ -18,12 +18,12 @@ export default function HomePage() {
     mattia: 0,
     updatedAt: "",
   });
-  const [loadingExp, setLoadingExp] = useState(true);
-  const [loadingSet, setLoadingSet] = useState(true);
+  // loading stays true until both snapshots arrive from the server (not cache)
+  const [expReady, setExpReady] = useState(false);
+  const [setReady, setSetReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Initial balance: one-shot fetch, retried on error
     let cancelled = false;
     async function fetchInitial(attempt = 0) {
       try {
@@ -40,22 +40,26 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const unsub = subscribeExpenses(
-      (data) => { setExpenses(data); setLoadingExp(false); },
-      (err) => { setError(err.message); setLoadingExp(false); }
+    return subscribeExpenses(
+      (data, fromCache) => {
+        setExpenses(data);
+        if (!fromCache) setExpReady(true);
+      },
+      (err) => { setError(err.message); setExpReady(true); }
     );
-    return unsub;
   }, []);
 
   useEffect(() => {
-    const unsub = subscribeSettlements(
-      (data) => { setSettlements(data); setLoadingSet(false); },
-      (err) => { setError(err.message); setLoadingSet(false); }
+    return subscribeSettlements(
+      (data, fromCache) => {
+        setSettlements(data);
+        if (!fromCache) setSetReady(true);
+      },
+      (err) => { setError(err.message); setSetReady(true); }
     );
-    return unsub;
   }, []);
 
-  const loading = loadingExp || loadingSet;
+  const loading = !expReady || !setReady;
   const balance = computeBalance(expenses, settlements, initialBalance);
 
   return (
