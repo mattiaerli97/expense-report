@@ -15,7 +15,7 @@ export default function ExpenseForm() {
   const [form, setForm] = useState({
     description: "",
     amount: "",
-    category: "Spesa alimentare" as Category,
+    category: "Casa" as Category,
     paidBy: "mattia" as Person,
     date: today,
   });

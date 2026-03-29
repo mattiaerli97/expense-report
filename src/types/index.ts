@@ -2,23 +2,55 @@ export type Person = "mattia" | "nicole";
 
 export type Category =
   | "Casa"
-  | "Spesa alimentare"
-  | "Ristorante/Bar"
-  | "Trasporti"
-  | "Svago"
+  | "Supermercato"
+  | "Carburante"
+  | "Bollette"
+  | "Affitto"
   | "Salute"
-  | "Abbigliamento"
-  | "Altro";
+  | "Cura personale"
+  | "Svago"
+  | "Vestiti"
+  | "Regali"
+  | "Telepass"
+  | "Parcheggio"
+  | "Vacanze"
+  | "Ludopatia"
+  | "Macchina"
+  | "Spese condominiali"
+  | "Lavoro"
+  | "Gelatino"
+  | "Lego"
+  | "Sconcerie"
+  | "Telefono"
+  | "Abbonamenti digitali"
+  | "Bici"
+  | "Camilla";
 
 export const CATEGORIES: Category[] = [
   "Casa",
-  "Spesa alimentare",
-  "Ristorante/Bar",
-  "Trasporti",
-  "Svago",
+  "Supermercato",
+  "Carburante",
+  "Bollette",
+  "Affitto",
   "Salute",
-  "Abbigliamento",
-  "Altro",
+  "Cura personale",
+  "Svago",
+  "Vestiti",
+  "Regali",
+  "Telepass",
+  "Parcheggio",
+  "Vacanze",
+  "Ludopatia",
+  "Macchina",
+  "Spese condominiali",
+  "Lavoro",
+  "Gelatino",
+  "Lego",
+  "Sconcerie",
+  "Telefono",
+  "Abbonamenti digitali",
+  "Bici",
+  "Camilla",
 ];
 
 export const PEOPLE: { id: Person; label: string }[] = [
