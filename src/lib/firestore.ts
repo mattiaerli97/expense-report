@@ -5,13 +5,23 @@ import {
   doc,
   query,
   orderBy,
-  getDocFromServer,
-  onSnapshot,
-  Query,
-  DocumentData,
+  getDocs,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Expense, Settlement, Balance, InitialBalance } from "@/types";
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 4, delayMs = 800): Promise<T> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries) throw err;
+      await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  throw new Error("unreachable");
+}
 
 // ─── Expenses ────────────────────────────────────────────────────────────────
 
@@ -25,20 +35,12 @@ export async function addExpense(
   return ref.id;
 }
 
-export function subscribeExpenses(
-  onData: (expenses: Expense[], fromCache: boolean) => void,
-  onError: (err: Error) => void
-): () => void {
-  const q = query(collection(db, "expenses"), orderBy("date", "desc"));
-  return onSnapshot(
-    q as Query<DocumentData>,
-    (snapshot) =>
-      onData(
-        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense)),
-        snapshot.metadata.fromCache
-      ),
-    onError
-  );
+export async function getExpenses(): Promise<Expense[]> {
+  return withRetry(async () => {
+    const q = query(collection(db, "expenses"), orderBy("date", "desc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+  });
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -57,20 +59,12 @@ export async function addSettlement(
   return ref.id;
 }
 
-export function subscribeSettlements(
-  onData: (settlements: Settlement[], fromCache: boolean) => void,
-  onError: (err: Error) => void
-): () => void {
-  const q = query(collection(db, "settlements"), orderBy("date", "desc"));
-  return onSnapshot(
-    q as Query<DocumentData>,
-    (snapshot) =>
-      onData(
-        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement)),
-        snapshot.metadata.fromCache
-      ),
-    onError
-  );
+export async function getSettlements(): Promise<Settlement[]> {
+  return withRetry(async () => {
+    const q = query(collection(db, "settlements"), orderBy("date", "desc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement));
+  });
 }
 
 export async function deleteSettlement(id: string): Promise<void> {
@@ -82,9 +76,11 @@ export async function deleteSettlement(id: string): Promise<void> {
 const SETTINGS_DOC = doc(db, "settings", "balance");
 
 export async function getInitialBalance(): Promise<InitialBalance> {
-  const snap = await getDocFromServer(SETTINGS_DOC);
-  if (!snap.exists()) return { mattia: 0, updatedAt: "" };
-  return snap.data() as InitialBalance;
+  return withRetry(async () => {
+    const snap = await getDoc(SETTINGS_DOC);
+    if (!snap.exists()) return { mattia: 0, updatedAt: "" };
+    return snap.data() as InitialBalance;
+  });
 }
 
 // ─── Balance calculation ──────────────────────────────────────────────────────

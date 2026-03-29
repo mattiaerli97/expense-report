@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Expense, Settlement, InitialBalance } from "@/types";
 import {
-  subscribeExpenses,
-  subscribeSettlements,
+  getExpenses,
+  getSettlements,
   getInitialBalance,
   computeBalance,
 } from "@/lib/firestore";
@@ -18,48 +18,34 @@ export default function HomePage() {
     mattia: 0,
     updatedAt: "",
   });
-  // loading stays true until both snapshots arrive from the server (not cache)
-  const [expReady, setExpReady] = useState(false);
-  const [setReady, setSetReady] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchInitial(attempt = 0) {
-      try {
-        const initial = await getInitialBalance();
-        if (!cancelled) setInitialBalance(initial);
-      } catch {
-        if (!cancelled && attempt < 3) {
-          setTimeout(() => fetchInitial(attempt + 1), 1500 * (attempt + 1));
-        }
-      }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [exp, set, initial] = await Promise.all([
+        getExpenses(),
+        getSettlements(),
+        getInitialBalance(),
+      ]);
+      setExpenses(exp);
+      setSettlements(set);
+      setInitialBalance(initial);
+    } catch (err) {
+      console.error("[load error]", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Errore: ${msg}`);
+    } finally {
+      setLoading(false);
     }
-    fetchInitial();
-    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    return subscribeExpenses(
-      (data, fromCache) => {
-        setExpenses(data);
-        if (!fromCache) setExpReady(true);
-      },
-      (err) => { setError(err.message); setExpReady(true); }
-    );
-  }, []);
+    load();
+  }, [load]);
 
-  useEffect(() => {
-    return subscribeSettlements(
-      (data, fromCache) => {
-        setSettlements(data);
-        if (!fromCache) setSetReady(true);
-      },
-      (err) => { setError(err.message); setSetReady(true); }
-    );
-  }, []);
-
-  const loading = !expReady || !setReady;
   const balance = computeBalance(expenses, settlements, initialBalance);
 
   return (
@@ -91,7 +77,7 @@ export default function HomePage() {
           <ExpenseList
             expenses={expenses}
             settlements={settlements}
-            onDelete={() => {}}
+            onDelete={load}
           />
         </>
       )}
