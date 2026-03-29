@@ -41,9 +41,6 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
         run: npm run build
 
-      - name: Check Firebase config in bundle
-        run: grep -rh "expense-tracker" out/_next/static/chunks/ && echo "OK project ID found in bundle" || echo "WARNING project ID missing from bundle"
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -9,18 +9,6 @@ import {
 import { db } from "./firebase";
 import { Expense, Settlement, Balance, InitialBalance } from "@/types";
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 4, delayMs = 800): Promise<T> {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (i === retries) throw err;
-      await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
-    }
-  }
-  throw new Error("unreachable");
-}
-
 // ─── Expenses ────────────────────────────────────────────────────────────────
 
 export async function addExpense(
@@ -34,12 +22,10 @@ export async function addExpense(
 }
 
 export async function getExpenses(): Promise<Expense[]> {
-  return withRetry(async () => {
-    const snapshot = await getDocs(collection(db, "expenses"));
-    return snapshot.docs
-      .map((d) => ({ id: d.id, ...d.data() } as Expense))
-      .sort((a, b) => b.date.localeCompare(a.date));
-  });
+  const snapshot = await getDocs(collection(db, "expenses"));
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Expense))
+    .sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -59,12 +45,10 @@ export async function addSettlement(
 }
 
 export async function getSettlements(): Promise<Settlement[]> {
-  return withRetry(async () => {
-    const snapshot = await getDocs(collection(db, "settlements"));
-    return snapshot.docs
-      .map((d) => ({ id: d.id, ...d.data() } as Settlement))
-      .sort((a, b) => b.date.localeCompare(a.date));
-  });
+  const snapshot = await getDocs(collection(db, "settlements"));
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Settlement))
+    .sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function deleteSettlement(id: string): Promise<void> {
@@ -76,11 +60,9 @@ export async function deleteSettlement(id: string): Promise<void> {
 const SETTINGS_DOC = doc(db, "settings", "balance");
 
 export async function getInitialBalance(): Promise<InitialBalance> {
-  return withRetry(async () => {
-    const snap = await getDoc(SETTINGS_DOC);
-    if (!snap.exists()) return { mattia: 0, updatedAt: "" };
-    return snap.data() as InitialBalance;
-  });
+  const snap = await getDoc(SETTINGS_DOC);
+  if (!snap.exists()) return { mattia: 0, updatedAt: "" };
+  return snap.data() as InitialBalance;
 }
 
 // ─── Balance calculation ──────────────────────────────────────────────────────
