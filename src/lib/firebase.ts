@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,10 +10,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Avoid re-initializing on hot reload
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Use persistent local cache to survive offline/transient connection errors
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache(),
+  localCache: memoryLocalCache(),
 });
