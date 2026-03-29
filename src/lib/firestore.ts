@@ -6,7 +6,9 @@ import {
   query,
   orderBy,
   getDocFromServer,
-  getDocsFromServer,
+  onSnapshot,
+  Query,
+  DocumentData,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Expense, Settlement, Balance, InitialBalance } from "@/types";
@@ -23,10 +25,17 @@ export async function addExpense(
   return ref.id;
 }
 
-export async function getExpenses(): Promise<Expense[]> {
+export function subscribeExpenses(
+  onData: (expenses: Expense[]) => void,
+  onError: (err: Error) => void
+): () => void {
   const q = query(collection(db, "expenses"), orderBy("date", "desc"));
-  const snapshot = await getDocsFromServer(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+  return onSnapshot(
+    q as Query<DocumentData>,
+    (snapshot) =>
+      onData(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense))),
+    onError
+  );
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -45,10 +54,19 @@ export async function addSettlement(
   return ref.id;
 }
 
-export async function getSettlements(): Promise<Settlement[]> {
+export function subscribeSettlements(
+  onData: (settlements: Settlement[]) => void,
+  onError: (err: Error) => void
+): () => void {
   const q = query(collection(db, "settlements"), orderBy("date", "desc"));
-  const snapshot = await getDocsFromServer(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement));
+  return onSnapshot(
+    q as Query<DocumentData>,
+    (snapshot) =>
+      onData(
+        snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement))
+      ),
+    onError
+  );
 }
 
 export async function deleteSettlement(id: string): Promise<void> {
@@ -59,10 +77,6 @@ export async function deleteSettlement(id: string): Promise<void> {
 
 const SETTINGS_DOC = doc(db, "settings", "balance");
 
-/**
- * Legge il saldo iniziale da Firestore.
- * Se il documento non esiste restituisce 0 (nessun saldo pregresso).
- */
 export async function getInitialBalance(): Promise<InitialBalance> {
   const snap = await getDocFromServer(SETTINGS_DOC);
   if (!snap.exists()) return { mattia: 0, updatedAt: "" };
@@ -76,32 +90,27 @@ export function computeBalance(
   settlements: Settlement[],
   initialBalance: InitialBalance = { mattia: 0, updatedAt: "" }
 ): Balance {
-  // Parte dal saldo pregresso
   let mattia = initialBalance.mattia;
 
   for (const e of expenses) {
     const half = e.amount / 2;
     if (e.paidBy === "mattia") {
-      // Mattia ha anticipato: va a credito di metà
       mattia += half;
     } else {
-      // Nicole ha anticipato: Mattia va a debito di metà
       mattia -= half;
     }
   }
 
   for (const s of settlements) {
     if (s.from === "mattia") {
-      // Mattia paga un debito: il suo saldo migliora
       mattia += s.amount;
     } else {
-      // Nicole paga: il saldo di Mattia peggiora
       mattia -= s.amount;
     }
   }
 
   return {
     mattia,
-    nicole: -mattia, // saldi sempre opposti
+    nicole: -mattia,
   };
 }

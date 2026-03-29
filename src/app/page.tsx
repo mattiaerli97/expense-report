@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Expense, Settlement, InitialBalance } from "@/types";
 import {
-  getExpenses,
-  getSettlements,
+  subscribeExpenses,
+  subscribeSettlements,
   getInitialBalance,
   computeBalance,
 } from "@/lib/firestore";
@@ -18,39 +18,44 @@ export default function HomePage() {
     mattia: 0,
     updatedAt: "",
   });
-  const [loading, setLoading] = useState(true);
+  const [loadingExp, setLoadingExp] = useState(true);
+  const [loadingSet, setLoadingSet] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async (attempt = 0) => {
-    setLoading(true);
-    setError("");
-    try {
-      const [exp, set, initial] = await Promise.all([
-        getExpenses(),
-        getSettlements(),
-        getInitialBalance(),
-      ]);
-      setExpenses(exp);
-      setSettlements(set);
-      setInitialBalance(initial);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // Firestore may report "offline" transiently on first load — retry once
-      if (attempt === 0 && msg.includes("offline")) {
-        setTimeout(() => load(1), 2000);
-        return;
+  useEffect(() => {
+    // Initial balance: one-shot fetch, retried on error
+    let cancelled = false;
+    async function fetchInitial(attempt = 0) {
+      try {
+        const initial = await getInitialBalance();
+        if (!cancelled) setInitialBalance(initial);
+      } catch {
+        if (!cancelled && attempt < 3) {
+          setTimeout(() => fetchInitial(attempt + 1), 1500 * (attempt + 1));
+        }
       }
-      console.error("[load error]", err);
-      setError(`Errore: ${msg}`);
-    } finally {
-      setLoading(false);
     }
+    fetchInitial();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const unsub = subscribeExpenses(
+      (data) => { setExpenses(data); setLoadingExp(false); },
+      (err) => { setError(err.message); setLoadingExp(false); }
+    );
+    return unsub;
+  }, []);
 
+  useEffect(() => {
+    const unsub = subscribeSettlements(
+      (data) => { setSettlements(data); setLoadingSet(false); },
+      (err) => { setError(err.message); setLoadingSet(false); }
+    );
+    return unsub;
+  }, []);
+
+  const loading = loadingExp || loadingSet;
   const balance = computeBalance(expenses, settlements, initialBalance);
 
   return (
@@ -82,7 +87,7 @@ export default function HomePage() {
           <ExpenseList
             expenses={expenses}
             settlements={settlements}
-            onDelete={load}
+            onDelete={() => {}}
           />
         </>
       )}
