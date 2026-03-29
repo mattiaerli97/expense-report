@@ -25,11 +25,13 @@ export default function HomePage() {
     setLoading(true);
     setError("");
     try {
+      console.log("[load] start");
       const [exp, set, initial] = await Promise.all([
         getExpenses(),
         getSettlements(),
         getInitialBalance(),
       ]);
+      console.log("[load] done", { exp: exp.length, set: set.length, initial });
       setExpenses(exp);
       setSettlements(set);
       setInitialBalance(initial);
@@ -38,6 +40,7 @@ export default function HomePage() {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Errore: ${msg}`);
     } finally {
+      console.log("[load] finally");
       setLoading(false);
     }
   }, []);
