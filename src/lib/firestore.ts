@@ -14,7 +14,6 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 4, delayMs = 800): P
     try {
       return await fn();
     } catch (err) {
-      console.warn(`[firestore] attempt ${i + 1} failed:`, err);
       if (i === retries) throw err;
       await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
     }
