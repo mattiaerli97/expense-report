@@ -1,12 +1,12 @@
 import {
   collection,
   addDoc,
-  getDocs,
   deleteDoc,
   doc,
   query,
   orderBy,
-  getDoc,
+  getDocFromServer,
+  getDocsFromServer,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Expense, Settlement, Balance, InitialBalance } from "@/types";
@@ -25,7 +25,7 @@ export async function addExpense(
 
 export async function getExpenses(): Promise<Expense[]> {
   const q = query(collection(db, "expenses"), orderBy("date", "desc"));
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocsFromServer(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
 }
 
@@ -47,7 +47,7 @@ export async function addSettlement(
 
 export async function getSettlements(): Promise<Settlement[]> {
   const q = query(collection(db, "settlements"), orderBy("date", "desc"));
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocsFromServer(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement));
 }
 
@@ -64,7 +64,7 @@ const SETTINGS_DOC = doc(db, "settings", "balance");
  * Se il documento non esiste restituisce 0 (nessun saldo pregresso).
  */
 export async function getInitialBalance(): Promise<InitialBalance> {
-  const snap = await getDoc(SETTINGS_DOC);
+  const snap = await getDocFromServer(SETTINGS_DOC);
   if (!snap.exists()) return { mattia: 0, updatedAt: "" };
   return snap.data() as InitialBalance;
 }
