@@ -21,7 +21,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (attempt = 0) => {
     setLoading(true);
     setError("");
     try {
@@ -34,8 +34,13 @@ export default function HomePage() {
       setSettlements(set);
       setInitialBalance(initial);
     } catch (err) {
-      console.error("[load error]", err);
       const msg = err instanceof Error ? err.message : String(err);
+      // Firestore may report "offline" transiently on first load — retry once
+      if (attempt === 0 && msg.includes("offline")) {
+        setTimeout(() => load(1), 2000);
+        return;
+      }
+      console.error("[load error]", err);
       setError(`Errore: ${msg}`);
     } finally {
       setLoading(false);
