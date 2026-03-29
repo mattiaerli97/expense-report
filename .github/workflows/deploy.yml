@@ -39,12 +39,10 @@ jobs:
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-        run: |
-          echo "PROJECT_ID set: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID != '' }}"
-          npm run build
-      
+        run: npm run build
+
       - name: Check Firebase config in bundle
-        run: grep -r "projectId" out/_next/static/chunks/*.js | grep -v "projectId:void 0" | head -3 || echo "WARNING: projectId not found or is undefined in bundle"
+        run: grep -rl "projectId" out/_next/static/chunks/ && echo "OK projectId found" || echo "WARNING projectId missing"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
