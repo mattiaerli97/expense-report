@@ -1,15 +1,7 @@
 const CACHE_NAME = "spese-v1";
 
-// Assets to pre-cache on install
-const PRECACHE_URLS = ["/", "/expenses/new", "/settlements/new"];
-
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
