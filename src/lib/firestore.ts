@@ -3,8 +3,6 @@ import {
   addDoc,
   deleteDoc,
   doc,
-  query,
-  orderBy,
   getDocs,
   getDoc,
 } from "firebase/firestore";
@@ -38,9 +36,10 @@ export async function addExpense(
 
 export async function getExpenses(): Promise<Expense[]> {
   return withRetry(async () => {
-    const q = query(collection(db, "expenses"), orderBy("date", "desc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Expense));
+    const snapshot = await getDocs(collection(db, "expenses"));
+    return snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() } as Expense))
+      .sort((a, b) => b.date.localeCompare(a.date));
   });
 }
 
@@ -62,9 +61,10 @@ export async function addSettlement(
 
 export async function getSettlements(): Promise<Settlement[]> {
   return withRetry(async () => {
-    const q = query(collection(db, "settlements"), orderBy("date", "desc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Settlement));
+    const snapshot = await getDocs(collection(db, "settlements"));
+    return snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() } as Settlement))
+      .sort((a, b) => b.date.localeCompare(a.date));
   });
 }
 
