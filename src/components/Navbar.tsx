@@ -3,11 +3,8 @@ import Link from "next/link";
 export default function Navbar() {
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          Mattia &amp; Nicole
-        </Link>
+    <header className="hidden sm:block bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-end">
         <nav className="flex gap-2">
           <Link
             href="/expenses/new"
@@ -21,7 +18,6 @@ export default function Navbar() {
           >
             ↔ Pagamento
           </Link>
-
         </nav>
       </div>
     </header>

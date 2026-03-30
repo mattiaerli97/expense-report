@@ -50,13 +50,6 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Riepilogo spese</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {expenses.length} spese &middot; {settlements.length} pagamenti
-        </p>
-      </div>
-
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
           {error}
