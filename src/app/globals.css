@@ -11,3 +11,12 @@
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Safe area per la bottom bar su PWA iOS */
+.bottom-bar-safe {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.main-bottom-safe {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+}
