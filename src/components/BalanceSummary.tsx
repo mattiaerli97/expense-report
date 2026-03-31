@@ -10,6 +10,8 @@ function formatEur(amount: number): string {
   return new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3,
   }).format(Math.abs(amount));
 }
 
