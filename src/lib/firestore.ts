@@ -11,13 +11,17 @@ import { Expense, Settlement, Balance, InitialBalance } from "@/types";
 
 // ─── Expenses ────────────────────────────────────────────────────────────────
 
+function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
 export async function addExpense(
   data: Omit<Expense, "id" | "createdAt">
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "expenses"), {
+  const ref = await addDoc(collection(db, "expenses"), stripUndefined({
     ...data,
     createdAt: new Date().toISOString(),
-  });
+  }));
   return ref.id;
 }
 
@@ -37,10 +41,10 @@ export async function deleteExpense(id: string): Promise<void> {
 export async function addSettlement(
   data: Omit<Settlement, "id" | "createdAt">
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "settlements"), {
+  const ref = await addDoc(collection(db, "settlements"), stripUndefined({
     ...data,
     createdAt: new Date().toISOString(),
-  });
+  }));
   return ref.id;
 }
 
