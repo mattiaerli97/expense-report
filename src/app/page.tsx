@@ -1,23 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Expense, Settlement, InitialBalance } from "@/types";
-import {
-  getExpenses,
-  getSettlements,
-  getInitialBalance,
-  computeBalance,
-} from "@/lib/firestore";
+import { Expense, Settlement } from "@/types";
+import { getExpenses, getSettlements, getBalance } from "@/lib/firestore";
 import BalanceSummary from "@/components/BalanceSummary";
 import ExpenseList from "@/components/ExpenseList";
+import type { Balance } from "@/types";
 
 export default function HomePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [initialBalance, setInitialBalance] = useState<InitialBalance>({
-    mattia: 0,
-    updatedAt: "",
-  });
+  const [balance, setBalance] = useState<Balance>({ mattia: 0, nicole: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,14 +18,14 @@ export default function HomePage() {
     setLoading(true);
     setError("");
     try {
-      const [exp, set, initial] = await Promise.all([
+      const [exp, set, bal] = await Promise.all([
         getExpenses(),
         getSettlements(),
-        getInitialBalance(),
+        getBalance(),
       ]);
       setExpenses(exp);
       setSettlements(set);
-      setInitialBalance(initial);
+      setBalance(bal);
     } catch (err) {
       console.error("[load error]", err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -45,8 +38,6 @@ export default function HomePage() {
   useEffect(() => {
     load();
   }, [load]);
-
-  const balance = computeBalance(expenses, settlements, initialBalance);
 
   return (
     <div className="space-y-6">

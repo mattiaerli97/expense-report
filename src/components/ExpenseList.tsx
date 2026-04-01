@@ -55,12 +55,15 @@ export default function ExpenseList({ expenses, settlements, onDelete }: Props) 
     return r.type === "settlement";
   });
 
-  async function handleDelete(type: "expense" | "settlement", id: string) {
+  async function handleDelete(row: Row) {
     if (!confirm("Eliminare questo elemento?")) return;
-    setDeletingId(id);
+    setDeletingId(row.data.id);
     try {
-      if (type === "expense") await deleteExpense(id);
-      else await deleteSettlement(id);
+      if (row.type === "expense") {
+        await deleteExpense(row.data.id, { amount: row.data.amount, paidBy: row.data.paidBy });
+      } else {
+        await deleteSettlement(row.data.id, { amount: row.data.amount, from: row.data.from });
+      }
       onDelete();
     } finally {
       setDeletingId(null);
@@ -134,7 +137,7 @@ export default function ExpenseList({ expenses, settlements, onDelete }: Props) 
                         {formatEur(e.amount)}
                       </span>
                       <button
-                        onClick={() => handleDelete("expense", e.id)}
+                        onClick={() => handleDelete(row)}
                         disabled={deletingId === e.id}
                         className="text-gray-300 hover:text-red-500 transition-colors text-xs p-1"
                         title="Elimina"
@@ -178,7 +181,7 @@ export default function ExpenseList({ expenses, settlements, onDelete }: Props) 
                         {formatEur(s.amount)}
                       </span>
                       <button
-                        onClick={() => handleDelete("settlement", s.id)}
+                        onClick={() => handleDelete(row)}
                         disabled={deletingId === s.id}
                         className="text-gray-300 hover:text-red-500 transition-colors text-xs p-1"
                         title="Elimina"
@@ -236,7 +239,7 @@ export default function ExpenseList({ expenses, settlements, onDelete }: Props) 
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
-                            onClick={() => handleDelete("expense", e.id)}
+                            onClick={() => handleDelete(row)}
                             disabled={deletingId === e.id}
                             className="text-gray-300 hover:text-red-500 transition-colors text-xs"
                             title="Elimina"
@@ -273,7 +276,7 @@ export default function ExpenseList({ expenses, settlements, onDelete }: Props) 
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
-                            onClick={() => handleDelete("settlement", s.id)}
+                            onClick={() => handleDelete(row)}
                             disabled={deletingId === s.id}
                             className="text-gray-300 hover:text-red-500 transition-colors text-xs"
                             title="Elimina"
